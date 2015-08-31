@@ -1,0 +1,5 @@
+When you have files to add: git add <filename/directory>
+To commit: git commit -m "<commit message>"
+                      -m add message
+                      -a add all files
+To unstage: git reset HEAD <filename>
