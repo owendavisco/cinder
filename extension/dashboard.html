@@ -12,7 +12,7 @@
     <!-- PAGE SCRIPTS -->
     <script src="js/dashboard.js"></script>
 </head>
-<body>
+<body style="text-align: center;">
     <nav id="menu" class="navbar navbar-inverse">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -28,6 +28,8 @@
             </div>
         </div>
     </nav>
-    <video id="rtcvid" autoplay poster="/img/filler.png" style="margin: auto;"></video>
+    <video id="rtcvid" autoplay style="height: 480px; width: 640px; background-color: black;"></video><br/><br/>
+    <button type="button" id="start-stream" class="btn btn-default">Start Stream</button>
+    <button type="button" id="end-stream" class="btn btn-default">End Stream</button>
 </body>
 </html>
