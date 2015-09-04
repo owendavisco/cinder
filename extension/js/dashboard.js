@@ -7,8 +7,8 @@ window.onload = function(){
         
         $("#rtcvid").attr('src', window.URL.createObjectURL(stream));
     },
-    function(){
-        console.log("Unable to access media.");
+    function(e){
+        console.log("Unable to access media.", e);
     });
 };
 
