@@ -1,5 +1,5 @@
 window.onload = function(){
-    $("#checkPage").click(function(){
-        alert("Hello World!");
+    $("#test").click(function(){
+        chrome.tabs.create({url: "../dashboard.html/"});
     });
 };
