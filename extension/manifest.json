@@ -1,0 +1,17 @@
+{
+    "manifest_version": 2,
+
+    "name": "Test Extension",
+    "description": "This extension will test usages of webRTC",
+    "version": "0.1",
+    
+    "options_page": "options.html",
+
+    "browser_action": {
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+        "permissions": [
+        "activeTab"
+    ]
+}
