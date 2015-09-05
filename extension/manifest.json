@@ -1,8 +1,8 @@
 {
     "manifest_version": 2,
 
-    "name": "Test Extension",
-    "description": "This extension will test usages of webRTC",
+    "name": "Reflex",
+    "description": "An extension for streaming from the browser.",
     "version": "0.1",
     
     "options_page": "options.html",
