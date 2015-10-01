@@ -12,7 +12,7 @@
     <!-- PAGE SCRIPTS -->
     <script src="js/dashboard.js"></script>
 </head>
-<body>
+<body style="text-align: center;">
     <nav id="menu" class="navbar navbar-inverse">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -20,14 +20,33 @@
             </div>
             <div>
                 <ul id="menu-pages" class="nav navbar-nav">
-                    <li class="active"><a href="../dashboard.html">Dashboard</a></li>
-                    <li><a href="../configuration.html">Configuration</a></li>
-                    <li><a href="../overlays.html">Overlays</a></li>
-                    <li><a href="../settings.html">Settings</a></li>
+                    <li class="active"><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="configuration.html">Configuration</a></li>
+                    <li><a href="overlays.html">Overlays</a></li>
+                    <li><a href="settings.html">Settings</a></li>
                 </ul>
             </div>
         </div>
     </nav>
-    <video id="rtcvid" autoplay poster="/img/filler.png" style="margin: auto;"></video>
+    <div class="row">
+        <div class="col-md-2 col-md-offset-1">
+            <h2>Audio Sources</h2>
+            <select id="audio-select" class="form-control" disabled>
+                <option>No audio sources available.</option>
+            </select><br/>
+            
+            <h2>Video Sources</h2>
+            <select id="video-select" class="form-control" disabled>
+                <option>No video sources available.</option>
+            </select><br/>
+            
+            <div>Stream from desktop?<input type="checkbox" id="desktop-checkbox" class="" /></div>
+        </div>
+        <div class="col-md-4 col-md-offset-1" style="padding: 1px 5px 1px 5px; box-shadow: 0 0 2pt 1pt #999999;">
+            <video id="rtcvid" style="height: 487px; width: 100%;" autoplay></video>
+        </div>
+    </div><br/>
+    <button type="button" id="start-stream" class="btn btn-default">Start Stream</button>
+    <button type="button" id="end-stream" class="btn btn-default">End Stream</button><br/>
 </body>
 </html>
