@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="bower_components/demo-console/index.css">
+<link rel="stylesheet" href="css/cinder.css">
+
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="bower_components/adapter.js/adapter.js"></script>
+
+
+<script src="js/kurento-utils.js"></script>
+<script src="js/index.js"></script>
+<title>Cinder</title>
+</head>
+<body>
+	<header>
+	</header>
+	<div class="container">
+		<div class="page-header">
+			<h1>Cinder Test</h1>
+		</div>
+			<div class="row button-menu">
+					<a id="present" href="#" class="btn btn-success"onclick="presenter(); return false;"><span class="glyphicon glyphicon-play"></span> Presenter</a> 
+					<a id="view" href="#" class="btn btn-primary" onclick="viewer(); return false;"><span class="glyphicon glyphicon-user"></span> Viewer</a> 
+					<a id="terminate" href="#" class="btn btn-danger" onclick="stop(); return false;"><span class="glyphicon glyphicon-stop"></span> Stop</a>
+			</div>
+			
+			<div id="main-video" class="video">
+				<video id="video" autoplay width="640px" height="480px" poster="https://majidwrite.files.wordpress.com/2013/12/charcoal-fire-flames1.jpg"></video>
+			</div>
+	</div>
+</body>
+</html>

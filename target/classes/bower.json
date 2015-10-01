@@ -1,0 +1,21 @@
+{
+  "name": "cinder",
+  "version": "0.0.1-SNAPSHOT",
+  "description": "${project.description}",
+  "main": "index.html",
+  "moduleType": [
+    "globals"
+  ],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.0",
+    "adapter.js": "*",
+  }
+}
