@@ -71,6 +71,15 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+              </configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -83,8 +92,6 @@
 					</execution>
 				</executions>
 				<configuration>
-				    <source>1.7</source>
-					<target>1.7</target>
 					<executable>bower</executable>
 					<arguments>
 						<argument>install</argument>
