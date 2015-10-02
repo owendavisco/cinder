@@ -83,6 +83,8 @@
 					</execution>
 				</executions>
 				<configuration>
+				    <source>1.7</source>
+					<target>1.7</target>
 					<executable>bower</executable>
 					<arguments>
 						<argument>install</argument>
