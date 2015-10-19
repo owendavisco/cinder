@@ -16,8 +16,8 @@ ws.onmessage = function(message) {
 	console.info('Received message: ' + message.data);
 
 	switch (parsedMessage.id) {
-	case 'presenterResponse':
-		presenterResponse(parsedMessage);
+	case 'broadcasterResponse':
+		broadcasterResponse(parsedMessage);
 		break;
 	case 'viewerResponse':
 		viewerResponse(parsedMessage);
@@ -36,7 +36,7 @@ ws.onmessage = function(message) {
 	}
 }
 
-function presenterResponse(message) {
+function broadcasterResponse(message) {
 	if (message.response != 'accepted') {
 		var errorMsg = message.message ? message.message : 'Unknow error';
 		console.info('Call not accepted for the following reason: ' + errorMsg);
@@ -62,7 +62,7 @@ function viewerResponse(message) {
 	}
 }
 
-function presenter() {
+function broadcaster() {
 	if (!webRtcPeer) {
 
 		var options = {
@@ -74,17 +74,17 @@ function presenter() {
 					if (error) {
 						return console.error(error);
 					}
-					webRtcPeer.generateOffer(onOfferPresenter);
+					webRtcPeer.generateOffer(onOfferbroadcaster);
 				});
 	}
 }
 
-function onOfferPresenter(error, offerSdp) {
+function onOfferbroadcaster(error, offerSdp) {
 	if (error)
 		return console.error('Error generating the offer');
 	console.info('Invoking SDP offer callback function ' + location.host);
 	var message = {
-		id : 'presenter',
+		id : 'broadcaster',
 		sdpOffer : offerSdp
 	}
 	sendMessage(message);
