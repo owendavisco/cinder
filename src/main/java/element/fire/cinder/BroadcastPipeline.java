@@ -53,7 +53,7 @@ public class BroadcastPipeline {
 		return mediaPipeline;
 	}
 	
-	public String generateSdpAnswerForBroadcaster(String sdpOffer){
+	public String generateSdpAnswer(String sdpOffer){
 		return webRtcEndpoint.processOffer(sdpOffer);
 	}
 	
