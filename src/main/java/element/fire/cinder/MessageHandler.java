@@ -51,7 +51,7 @@ public class MessageHandler extends TextWebSocketHandler {
 			case "broadcaster":
 					broadcaster(session, jsonMessage);
 				break;
-			case "viewBroadcast":
+			case "viewer":
 					viewBroadcast(session, jsonMessage);
 				break;
 			case "playRecording":
@@ -255,15 +255,15 @@ public class MessageHandler extends TextWebSocketHandler {
 			}
 			log.info("Starting to view broadcast");
 			
-			//1. User Logic
+			//1. Create WebRtc Endpoint
+			WebRtcEndpoint newViewerWebRtc = broadcastPipeline.buildViewerEndpoint();
+			
+			//2. User Logic
 			UserSession viewer = new UserSession(session);
 			viewerUserSessions.put(session.getId(), viewer);
 			
-			//2. SDP off
+			//3. SDP negotiation
 			String viewerSdpOffer = jsonMessage.get("sdpOffer").getAsString();
-			
-			//3. Create WebRtc Endpoint
-			WebRtcEndpoint newViewerWebRtc = broadcastPipeline.buildViewerEndpoint();
 			
 			//4. Gather ICE candidates
 			newViewerWebRtc.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
@@ -289,10 +289,10 @@ public class MessageHandler extends TextWebSocketHandler {
 			//Connect the viewer WebRtc to the Broadcaster WebRtc
 			broadcasterUserSession.getWebRtcEndpoint().connect(newViewerWebRtc);
 			
-			String viewerSdpAnswer = broadcastPipeline.generateSdpAnswer(viewerSdpOffer);
+			String viewerSdpAnswer = newViewerWebRtc.processAnswer(viewerSdpOffer);
 			
 			JsonObject response = new JsonObject();
-			response.addProperty("id", "viewBroadcast");
+			response.addProperty("id", "viewerResponse");
 			response.addProperty("response", "accepted");
 			response.addProperty("sdpAnswer", viewerSdpAnswer);
 
