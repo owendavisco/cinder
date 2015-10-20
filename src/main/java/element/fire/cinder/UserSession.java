@@ -64,16 +64,6 @@ public class UserSession {
 
 	public void setWebRtcEndpoint(WebRtcEndpoint webRtcEndpoint){
 		this.webRtcEndpoint = webRtcEndpoint;
-		
-		if(this.webRtcEndpoint != null){
-			//Add all of the ice candidates to the webRtcEndpoint
-			for(IceCandidate iceCandidate : iceCandidateList){
-				this.webRtcEndpoint.addIceCandidate(iceCandidate);
-			}
-			
-			//We have added all the candidate, now clear the list
-			iceCandidateList.clear();
-		}
 	}
 
 	public void addCandidate(IceCandidate iceCandidate) {

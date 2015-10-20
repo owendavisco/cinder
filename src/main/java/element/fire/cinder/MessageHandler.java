@@ -254,19 +254,15 @@ public class MessageHandler extends TextWebSocketHandler {
 				return;				
 			}
 			log.info("Starting to view broadcast");
-			
-			//1. Create WebRtc Endpoint
-			WebRtcEndpoint newViewerWebRtc = broadcastPipeline.buildViewerEndpoint();
-			
-			//2. User Logic
+
 			UserSession viewer = new UserSession(session);
 			viewerUserSessions.put(session.getId(), viewer);
-			
-			//3. SDP negotiation
-			String viewerSdpOffer = jsonMessage.get("sdpOffer").getAsString();
-			
-			//4. Gather ICE candidates
-			newViewerWebRtc.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
+
+			String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer").getAsString();
+
+			WebRtcEndpoint nextWebRtc = broadcastPipeline.buildViewerEndpoint();
+
+			nextWebRtc.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
 
 				@Override
 				public void onEvent(OnIceCandidateEvent event) {
@@ -282,73 +278,21 @@ public class MessageHandler extends TextWebSocketHandler {
 					}
 				}
 			});
-			
-			//Set viewer WebRtc Endpoint
-			viewer.setWebRtcEndpoint(newViewerWebRtc);
-			
-			//Connect the viewer WebRtc to the Broadcaster WebRtc
-			broadcasterUserSession.getWebRtcEndpoint().connect(newViewerWebRtc);
-			
-			String viewerSdpAnswer = newViewerWebRtc.processAnswer(viewerSdpOffer);
-			
+
+			viewer.setWebRtcEndpoint(nextWebRtc);
+			broadcasterUserSession.getWebRtcEndpoint().connect(nextWebRtc);
+			String sdpAnswer = nextWebRtc.processOffer(sdpOffer);
+
 			JsonObject response = new JsonObject();
 			response.addProperty("id", "viewerResponse");
 			response.addProperty("response", "accepted");
-			response.addProperty("sdpAnswer", viewerSdpAnswer);
+			response.addProperty("sdpAnswer", sdpAnswer);
 
 			synchronized (session) {
 				viewer.sendMessage(response);
 			}
-			newViewerWebRtc.gatherCandidates();
+			nextWebRtc.gatherCandidates();
 		}
-//		else {
-//			if (viewers.containsKey(session.getId())) {
-//				JsonObject response = new JsonObject();
-//				response.addProperty("id", "viewBroadcast");
-//				response.addProperty("response", "rejected");
-//				response.addProperty("message",
-//						"You are already viewing in this session. Use a different browser to add additional viewers.");
-//				session.sendMessage(new TextMessage(response.toString()));
-//				return;
-//			}
-//			UserSession viewer = new UserSession(session);
-//			viewers.put(session.getId(), viewer);
-//
-//			String sdpOffer = jsonMessage.getAsJsonPrimitive("sdpOffer").getAsString();
-//
-//			WebRtcEndpoint nextWebRtc = new WebRtcEndpoint.Builder(broadcastPipeline).build();
-//
-//			nextWebRtc.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
-//
-//				@Override
-//				public void onEvent(OnIceCandidateEvent event) {
-//					JsonObject response = new JsonObject();
-//					response.addProperty("id", "iceCandidate");
-//					response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-//					try {
-//						synchronized (session) {
-//							session.sendMessage(new TextMessage(response.toString()));
-//						}
-//					} catch (IOException e) {
-//						log.debug(e.getMessage());
-//					}
-//				}
-//			});
-//
-//			viewer.setWebRtcEndpoint(nextWebRtc);
-//			broadcasterUserSession.getWebRtcEndpoint().connect(nextWebRtc);
-//			String sdpAnswer = nextWebRtc.processOffer(sdpOffer);
-//
-//			JsonObject response = new JsonObject();
-//			response.addProperty("id", "viewBroadcast");
-//			response.addProperty("response", "accepted");
-//			response.addProperty("sdpAnswer", sdpAnswer);
-//
-//			synchronized (session) {
-//				viewer.sendMessage(response);
-//			}
-//			nextWebRtc.gatherCandidates();
-//		}
 	}
 
 	private synchronized void stop(WebSocketSession session) throws IOException {
