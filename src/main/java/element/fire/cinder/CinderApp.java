@@ -39,14 +39,23 @@ public class CinderApp implements WebSocketConfigurer {
 
 	public static void main(String[] args) throws Exception {
 		Options options = new Options();
+		
+		//Add the option -kms or --kms_ws_uri followed by an argument
+		//example: -kms "ws://192.168.1.119:8888/kurento"
 		options.addOption(Option.builder("kms")
                                 .longOpt("kms_ws_uri")
                                 .hasArg()
                                 .desc("Changes the default kurento media server ip").argName("kms")
                                 .build());
 		CommandLineParser parser = new DefaultParser();
+		
+		//Parse the command line for defined arguments
 		CommandLine line = parser.parse(options, args);
+		
+		//Set the kurento media server uri to either the parsed argument or just localhost
 		KMS_WS_URI = line.getOptionValue("kms") != null ? line.getOptionValue("kms") : "ws://localhost:8888/kurento";
+		
+		//Create the application
 		new SpringApplication(CinderApp.class).run(args);
 	}
 
