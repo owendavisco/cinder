@@ -1,0 +1,18 @@
+{
+    "manifest_version": 2,
+
+    "name": "Cinder",
+    "description": "An extension for streaming from the browser.",
+    "version": "0.1",
+    
+    "options_page": "options.html",
+
+    "browser_action": {
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "activeTab",
+        "desktopCapture"
+    ]
+}

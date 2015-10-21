@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="bower_components/demo-console/index.css">
+<link rel="stylesheet" href="css/cinder.css">
+
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="bower_components/adapter.js/adapter.js"></script>
+
+
+<script src="js/kurento-utils.js"></script>
+<script src="js/index.js"></script>
+<title>Cinder</title>
+</head>
+<body>
+	<header>
+	</header>
+        <nav id="menu" class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Cinder</a>
+            </div>
+            <div>
+                <ul id="menu-pages" class="nav navbar-nav">
+                    <li class="active"><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="configuration.html">Configuration</a></li>
+                    <li><a href="overlays.html">Overlays</a></li>
+                    <li><a href="settings.html">Settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-2 col-md-offset-1">
+            <h2>Audio Sources</h2>
+            <select id="audio-select" class="form-control" disabled>
+                <option>No audio sources available.</option>
+            </select><br/>
+            
+            <h2>Video Sources</h2>
+            <select id="video-select" class="form-control" disabled>
+                <option>No video sources available.</option>
+            </select><br/>
+            
+            <div>Stream from desktop?<input type="checkbox" id="desktop-checkbox" class="" /></div>
+        </div>
+			<div id="main-video" class="video col-md-4 col-md-offset-1" style="padding: 1px 5px 1px 5px; box-shadow: 0 0 2pt 1pt #999999;">
+            <div class="row button-menu">
+					<a id="broadcast" href="#" class="btn btn-success"onclick="broadcaster(); return false;"><span class="glyphicon glyphicon-play"></span> Broadcast</a> 
+					<a id="viewBroadcast" href="#" class="btn btn-primary" onclick="viewer(); return false;"><span class="glyphicon glyphicon-user"></span> View Broadcast</a> 
+					<a id="playRecording" href="#" class="btn btn-primary" onclick="player(); return false;"><span class="glyphicon glyphicon-eye-open"></span> Play Recording</a>
+					<a id="terminate" href="#" class="btn btn-danger" onclick="stop(); return false;"><span class="glyphicon glyphicon-stop"></span> Stop</a>
+			</div>
+				<video id="video" autoplay style="height: 487px; width: 100%;"></video>
+			</div>
+    </div><br/>
+</body>
+</html>
