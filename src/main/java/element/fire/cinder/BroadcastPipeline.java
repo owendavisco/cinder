@@ -31,6 +31,7 @@ public class BroadcastPipeline {
 		recorderEndpoint = new RecorderEndpoint.Builder(mediaPipeline, RECORDING_PATH + broadcastTitle + RECORDING_EXT)
 				.withMediaProfile(MediaProfileSpecType.WEBM).build();
 		
+		//Connect the endpoints together
 		webRtcEndpoint.connect(recorderEndpoint);
 	}
 	

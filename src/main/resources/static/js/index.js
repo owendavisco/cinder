@@ -22,6 +22,9 @@ ws.onmessage = function(message) {
 	case 'viewerResponse':
 		viewerResponse(parsedMessage);
 		break;
+	case 'playResponse':
+		playResponse(parsedMessage);
+		break;
 	case 'iceCandidate':
 		webRtcPeer.addIceCandidate(parsedMessage.candidate, function(error) {
 			if (error)
@@ -39,7 +42,7 @@ ws.onmessage = function(message) {
 function broadcasterResponse(message) {
 	if (message.response != 'accepted') {
 		var errorMsg = message.message ? message.message : 'Unknow error';
-		console.info('Call not accepted for the following reason: ' + errorMsg);
+		console.info('Starting broadcast failed for the following reason: ' + errorMsg);
 		dispose();
 	} else {
 		webRtcPeer.processAnswer(message.sdpAnswer, function(error) {
@@ -52,7 +55,20 @@ function broadcasterResponse(message) {
 function viewerResponse(message) {
 	if (message.response != 'accepted') {
 		var errorMsg = message.message ? message.message : 'Unknow error';
-		console.info('Call not accepted for the following reason: ' + errorMsg);
+		console.info('Viewing broadcast failed for the following reason: ' + errorMsg);
+		dispose();
+	} else {
+		webRtcPeer.processAnswer(message.sdpAnswer, function(error) {
+			if (error)
+				return console.error(error);
+		});
+	}
+}
+
+function playResponse(message) {
+	if (message.response != 'accepted') {
+		var errorMsg = message.message ? message.message : 'Unknow error';
+		console.info('Play recording for the following reason: ' + errorMsg);
 		dispose();
 	} else {
 		webRtcPeer.processAnswer(message.sdpAnswer, function(error) {
@@ -115,6 +131,32 @@ function onOfferViewer(error, offerSdp) {
 		id : 'viewer',
 		sdpOffer : offerSdp
 	}
+	sendMessage(message);
+}
+
+function player() {
+	if (!webRtcPeer) {
+
+		var options = {
+			remoteVideo : video,
+			onicecandidate : onIceCandidate
+		}
+		webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
+				function(error) {
+					if (error) {
+						return console.error(error);
+					}
+					this.generateOffer(onOfferPlayer);
+				});
+	}
+}
+
+function onOfferPlayer(error, offerSdp) {
+	console.log('Invoking SDP offer callback function');
+	var message = {
+		id : 'player',
+		sdpOffer : offerSdp
+	};
 	sendMessage(message);
 }
 
