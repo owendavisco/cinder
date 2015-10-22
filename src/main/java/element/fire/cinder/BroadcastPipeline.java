@@ -1,9 +1,12 @@
 package element.fire.cinder;
 
+import org.kurento.client.Fraction;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.kurento.client.MediaProfileSpecType;
 import org.kurento.client.RecorderEndpoint;
+import org.kurento.client.VideoCaps;
+import org.kurento.client.VideoCodec;
 import org.kurento.client.WebRtcEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +29,7 @@ public class BroadcastPipeline {
 		
 		//Create the broadcaster pipeline
 		webRtcEndpoint = new WebRtcEndpoint.Builder(mediaPipeline).build();
+		webRtcEndpoint.setMaxVideoRecvBandwidth(Integer.MAX_VALUE);
 		
 		//Create the recording endpoint for the broadcast
 		recorderEndpoint = new RecorderEndpoint.Builder(mediaPipeline, RECORDING_PATH + broadcastTitle + RECORDING_EXT)

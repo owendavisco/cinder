@@ -1,5 +1,5 @@
 
-var ws = new WebSocket('ws://' + "localhost:8080" + '/call');
+var ws = new WebSocket('ws://' + "192.168.1.112:8080" + '/call');
 var video;
 var webRtcPeer;
 

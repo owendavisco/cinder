@@ -33,6 +33,7 @@ public class CinderApp implements WebSocketConfigurer {
 		return KurentoClient.create(System.getProperty("kms.ws.uri", KMS_WS_URI));
 	}
 
+	@Override
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry.addHandler(callHandler(), "/call");
 	}
