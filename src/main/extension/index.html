@@ -17,9 +17,7 @@
 <title>Cinder</title>
 </head>
 <body>
-	<header>
-	</header>
-        <nav id="menu" class="navbar navbar-inverse">
+    <nav id="menu" class="navbar navbar-inverse navbar-static-top" style="margin-bottom: 0px;">
         <div class="container-fluid">
             <div class="navbar-header">
                 <a class="navbar-brand" href="#">Cinder</a>
@@ -31,32 +29,18 @@
                     <li><a href="overlays.html">Overlays</a></li>
                     <li><a href="settings.html">Settings</a></li>
                 </ul>
+                
+                <!-- not true cetnering, rework later -->
+                <div class="row button-menu" style="text-align: right; padding: 8px 4px 0px 0px;">
+                    <a id="broadcast" class="btn btn-success"><span class="glyphicon glyphicon-play"></span></a>
+                    <a id="terminate" class="btn btn-danger"><span class="glyphicon glyphicon-stop"></span></a>
+                    <a id="viewBroadcast" class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span></a> 
+                    <a id="playRecording" class="btn btn-primary"><span class="glyphicon glyphicon-expand"></span></a>
+                    <a id="question" class="btn btn-primary" data-toggle="popover" title="Button Information" data-content="From left to right: play, stop, view broadcast, view recording" data-placement="bottom"><span class="glyphicon glyphicon-question-sign"></span></a>
+                </div>
             </div>
         </div>
     </nav>
-    <div class="row">
-        <div class="col-md-2 col-md-offset-1">
-            <h2>Audio Sources</h2>
-            <select id="audio-select" class="form-control" disabled>
-                <option>No audio sources available.</option>
-            </select><br/>
-            
-            <h2>Video Sources</h2>
-            <select id="video-select" class="form-control" disabled>
-                <option>No video sources available.</option>
-            </select><br/>
-            
-            <div>Stream from desktop?<input type="checkbox" id="desktop-checkbox" class="" /></div>
-        </div>
-			<div id="main-video" class="video col-md-4 col-md-offset-1" style="padding: 1px 5px 1px 5px; box-shadow: 0 0 2pt 1pt #999999;">
-            <div class="row button-menu">
-					<a id="broadcast" href="#" class="btn btn-success"><span class="glyphicon glyphicon-play"></span> Broadcast</a> 
-					<a id="viewBroadcast" href="#" class="btn btn-primary"><span class="glyphicon glyphicon-user"></span> View Broadcast</a> 
-					<a id="playRecording" href="#" class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span> Play Recording</a>
-					<a id="terminate" href="#" class="btn btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</a>
-			</div>
-				<video id="video" autoplay style="height: 487px; width: 100%;"></video>
-			</div>
-    </div><br/>
+    <video id="video" class="text-center" autoplay style="background-color: #707070; width: 100%; height: auto;"></video>
 </body>
 </html>

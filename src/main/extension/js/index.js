@@ -1,26 +1,28 @@
 
-var ws = new WebSocket('ws://' + "10.84.44.111:8080" + '/call');
+var ws = new WebSocket('ws://' + "10.84.44.65:6969" + '/call');
 var video;
 var webRtcPeer;
 
-$("#broadcast").click(function(){
-    captureDesktop();
-});
-
-$("#viewBroadcast").click(function(){
-    viewer();
-});
-
-$("#playRecording").click(function(){
-    player();
-});
-
-$("#terminate").click(function(){
-    stop();
-});
-
 window.onload = function() {
 	video = document.getElementById('video');
+    
+    $('[data-toggle="popover"]').popover();
+
+    $("#broadcast").click(function(){
+        captureDesktop();
+    });
+
+    $("#viewBroadcast").click(function(){
+        viewer();
+    });
+
+    $("#playRecording").click(function(){
+        player();
+    });
+
+    $("#terminate").click(function(){
+        stop();
+    });
 };
 
 window.onbeforeunload = function() {
