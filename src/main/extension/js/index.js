@@ -1,7 +1,23 @@
 
-var ws = new WebSocket('ws://' + "192.168.1.112:8080" + '/call');
+var ws = new WebSocket('ws://' + "10.84.44.111:8080" + '/call');
 var video;
 var webRtcPeer;
+
+$("#broadcast").click(function(){
+    captureDesktop();
+});
+
+$("#viewBroadcast").click(function(){
+    viewer();
+});
+
+$("#playRecording").click(function(){
+    player();
+});
+
+$("#terminate").click(function(){
+    stop();
+});
 
 window.onload = function() {
 	video = document.getElementById('video');
