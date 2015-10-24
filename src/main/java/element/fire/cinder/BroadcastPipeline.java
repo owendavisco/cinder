@@ -30,6 +30,8 @@ public class BroadcastPipeline {
 		//Create the broadcaster pipeline
 		webRtcEndpoint = new WebRtcEndpoint.Builder(mediaPipeline).build();
 		webRtcEndpoint.setMaxVideoRecvBandwidth(Integer.MAX_VALUE);
+		webRtcEndpoint.setStunServerAddress("173.194.65.127");
+		webRtcEndpoint.setStunServerPort(19302);
 		
 		//Create the recording endpoint for the broadcast
 		recorderEndpoint = new RecorderEndpoint.Builder(mediaPipeline, RECORDING_PATH + broadcastTitle + RECORDING_EXT)
