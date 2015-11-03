@@ -1,5 +1,5 @@
 
-var ws = new WebSocket('ws://' + "104.197.184.53:8080" + '/call');
+var ws = new WebSocket('ws://' + "localhost:8080" + '/call');
 var video;
 var webRtcPeer;
 
@@ -121,18 +121,32 @@ function broadcaster(chromeMediaSourceId) {
             }
     };
     
-		var options = {
-			localVideo : video,
-			onicecandidate : onIceCandidate,
-			mediaConstraints : MEDIA_CONSTRAINTS
-		};
-		webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-				function(error) {
-					if (error) {
-						return console.error(error);
-					}
-					webRtcPeer.generateOffer(onOfferbroadcaster);
-				});
+    navigator.getUserMedia({video: false, audio:true},
+    function(webcamStream){
+        navigator.getUserMedia(MEDIA_CONSTRAINTS, 
+        function(desktopStream){
+          desktopStream.addTrack(webcamStream.getAudioTracks()[0]);
+          var options = {
+          	  localVideo : video,
+          		onicecandidate : onIceCandidate,
+          		videoStream : desktopStream
+        		};
+        		
+        	webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
+        			function(error) {
+        				if (error) {
+        					return console.error(error);
+        				}
+        				webRtcPeer.generateOffer(onOfferbroadcaster);
+        			});
+        },
+        function(error){
+          console.log("Error getting the desktop stream " + e.message);
+        });
+    },
+    function(error){
+        console.log("Error getting the webcam stream " + e.message);
+    });
 	}
 }
 
