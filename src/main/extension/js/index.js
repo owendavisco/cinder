@@ -1,15 +1,35 @@
 
-var ws = new WebSocket('ws://' + "localhost:8080" + '/call');
+var ws = new WebSocket('ws://' + "10.84.44.135:8080" + '/call');
 var video;
 var webRtcPeer;
+var audioStream;
+var desktopStream;
 
 window.onload = function() {
-	video = document.getElementById('video');
+	  video = document.getElementById('video');
+	
+	  var $video  = $('video'),
+    $window = $(window); 
+
+    $(window).resize(function(){
+        
+        var height = $window.height() - $('#menu').height();
+        $video.css('height', height);
+        
+        var videoWidth = $video.width(),
+            windowWidth = $window.width(),
+        marginLeftAdjust =   (windowWidth - videoWidth) / 2;
+        
+        $video.css({
+            'height': height, 
+            'marginLeft' : marginLeftAdjust
+        });
+    }).resize();
     
     $('[data-toggle="popover"]').popover();
 
     $("#broadcast").click(function(){
-        captureDesktop();
+        startBroadcast();
     });
 
     $("#viewBroadcast").click(function(){
@@ -96,58 +116,72 @@ function playResponse(message) {
 	}
 }
 
-function captureDesktop() {
-    var desktop_id = chrome.desktopCapture.chooseDesktopMedia(['screen', 'window'], broadcaster);
-}
-
-function broadcaster(chromeMediaSourceId) {
-	if (!webRtcPeer) {
-
-    var MEDIA_CONSTRAINTS = {
-            audio: false,
-            video: {
-                mandatory: {
-                    chromeMediaSource: 'desktop',
-                    chromeMediaSourceId: chromeMediaSourceId,
-                    maxWidth: 1920,
-                    maxHeight: 1080,
-                    minFrameRate: 30,
-                    maxFrameRate: 64,
-                    minAspectRatio: 1.77,
-                    googLeakyBucket: true,
-                    googTemporalLayeredScreencast: true
-                },
-                optional: []
-            }
+function startBroadcast(){
+  if(!webRtcPeer){
+    audioStreamConstraints = {
+      video: false,
+      audio: true
     };
     
-    navigator.getUserMedia({video: false, audio:true},
-    function(webcamStream){
-        navigator.getUserMedia(MEDIA_CONSTRAINTS, 
-        function(desktopStream){
-          desktopStream.addTrack(webcamStream.getAudioTracks()[0]);
-          var options = {
-          	  localVideo : video,
-          		onicecandidate : onIceCandidate,
-          		videoStream : desktopStream
-        		};
-        		
-        	webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
-        			function(error) {
-        				if (error) {
-        					return console.error(error);
-        				}
-        				webRtcPeer.generateOffer(onOfferbroadcaster);
-        			});
-        },
-        function(error){
-          console.log("Error getting the desktop stream " + e.message);
-        });
-    },
-    function(error){
-        console.log("Error getting the webcam stream " + e.message);
+    navigator.getUserMedia(audioStreamConstraints, captureAudioStream, 
+    function(e){
+      console.error("An error occured when getting audio stream, " + e.message);
     });
-	}
+  }
+}
+
+function captureAudioStream(stream){
+  audioStream = stream;
+  
+  captureDesktop();
+}
+
+function captureDesktop() {
+  chrome.desktopCapture.chooseDesktopMedia(['screen', 'window'], getDesktopMedia);
+}
+
+function getDesktopMedia(chromeMediaSourceId){
+  var media_constraints = {
+    audio: false,
+    video: {
+      mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: chromeMediaSourceId,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          minFrameRate: 30,
+          maxFrameRate: 64,
+          // minAspectRatio: 1.77,
+          googLeakyBucket: true,
+          googTemporalLayeredScreencast: true
+        },
+        optional: []
+    }
+  };
+  
+  navigator.getUserMedia(media_constraints, captureDesktopStream, 
+  function(e){
+    console.error("An error occured when getting desktop stream, " + e.message);
+  });
+}
+
+function captureDesktopStream(stream){
+  desktopStream = stream;
+  desktopStream.addTrack(audioStream.getAudioTracks()[0]);
+  
+  var options = {
+    localVideo: video,
+    onicecandidate: onIceCandidate,
+    videoStream: desktopStream
+  };
+  
+  webRtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options,
+  function(error) {
+    if (error) {
+      return console.error(error);
+    }
+    webRtcPeer.generateOffer(onOfferbroadcaster);
+  });
 }
 
 function onOfferbroadcaster(error, offerSdp) {
