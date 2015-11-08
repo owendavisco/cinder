@@ -1,5 +1,7 @@
 package element.fire.cinder;
 
+import java.util.UUID;
+
 import org.kurento.client.Fraction;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
@@ -21,8 +23,12 @@ public class BroadcastPipeline {
 	private final WebRtcEndpoint webRtcEndpoint;
 	private final RecorderEndpoint recorderEndpoint;
 	
-	public BroadcastPipeline(KurentoClient kurento, String broadcastTitle){
+	public final UUID pipelineId;
+	
+	public BroadcastPipeline(KurentoClient kurento, String broadcastTitle, UUID pipelineId){
 		log.info("Creating Broadcast pipeline");
+		
+		this.pipelineId = pipelineId; 
 		
 		//Create the media pipeline
 		mediaPipeline = kurento.createMediaPipeline();

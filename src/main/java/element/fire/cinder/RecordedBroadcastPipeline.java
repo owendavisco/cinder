@@ -36,7 +36,7 @@ public class RecordedBroadcastPipeline {
 		
 		//Create the broadcaster pipeline
 		webRtcEndpoint = new WebRtcEndpoint.Builder(mediaPipeline).build();
-		webRtcEndpoint.setStunServerAddress("173.194.65.127");
+		webRtcEndpoint.setStunServerAddress("173.194.66.127");
 		webRtcEndpoint.setStunServerPort(19302);
 		
 		//Create the playing endpoint for the broadcast

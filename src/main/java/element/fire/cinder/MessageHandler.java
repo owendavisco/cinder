@@ -3,6 +3,7 @@ package element.fire.cinder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.kurento.client.EndOfStreamEvent;
@@ -36,7 +37,7 @@ public class MessageHandler extends TextWebSocketHandler {
 	@Autowired
 	private KurentoClient kurento;
 
-	private BroadcastPipeline broadcastPipeline;
+	private BroadcastPipeline broadcastWebcamPipeline, broadcastDesktopPipeline;
 	private UserSession broadcasterUserSession;
 	
 	private final ConcurrentHashMap<String, UserSession> viewerUserSessions = new ConcurrentHashMap<String, UserSession>();
@@ -44,17 +45,26 @@ public class MessageHandler extends TextWebSocketHandler {
 	@Override
 	public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception{
 		JsonObject jsonMessage = gson.fromJson(message.getPayload(), JsonObject.class);
-		log.debug("Incoming message from session '{}': {}", session.getId(), jsonMessage);
+		log.info("Incoming message from session '{}': {}", session.getId(), jsonMessage);
 
 		switch (jsonMessage.get("id").getAsString()){
-			case "broadcaster":
-					broadcast(session, jsonMessage);
+			case "broadcast":
+				if(jsonMessage.get("media").getAsString().equals("webcam"))
+					broadcastWebcamPipeline = broadcast(session, jsonMessage, "webcam");
+				else if(jsonMessage.get("media").getAsString().equals("desktop"))
+					broadcastDesktopPipeline = broadcast(session, jsonMessage, "desktop");
 				break;
 			case "viewer":
-					viewBroadcast(session, jsonMessage);
+				if(jsonMessage.get("media").getAsString().equals("webcam"))
+					viewBroadcast(session, jsonMessage, broadcastWebcamPipeline, "webcam");
+				else if(jsonMessage.get("media").getAsString().equals("desktop"))
+					viewBroadcast(session, jsonMessage, broadcastDesktopPipeline, "desktop");
 				break;
 			case "player":
-					playRecording(session, jsonMessage);
+				if(jsonMessage.get("media").getAsString().equals("webcam"))
+					playRecording(session, jsonMessage, "webcam");
+				else if(jsonMessage.get("media").getAsString().equals("desktop"))
+					playRecording(session, jsonMessage, "desktop");
 				break;
 			case "onIceCandidate":
 				JsonObject candidate = jsonMessage.get("candidate").getAsJsonObject();
@@ -69,7 +79,10 @@ public class MessageHandler extends TextWebSocketHandler {
 				if (user != null) {
 					IceCandidate cand = new IceCandidate(candidate.get("candidate").getAsString(),
 							candidate.get("sdpMid").getAsString(), candidate.get("sdpMLineIndex").getAsInt());
-					user.addCandidate(cand);
+					if(jsonMessage.get("media").getAsString().equals("webcam"))
+						user.addWebcamCandidate(cand);
+					else
+						user.addDesktopCandidate(cand);
 				}
 				break;
 			case "stop":
@@ -80,7 +93,7 @@ public class MessageHandler extends TextWebSocketHandler {
 		}
 	}
 	
-	private synchronized void playRecording(final WebSocketSession session, JsonObject jsonMessage) throws IOException {
+	private synchronized void playRecording(final WebSocketSession session, JsonObject jsonMessage, final String media) throws IOException {
 		if (broadcasterUserSession !=  null) {
 			JsonObject response = new JsonObject();
 			response.addProperty("id", "playResponse");
@@ -89,23 +102,30 @@ public class MessageHandler extends TextWebSocketHandler {
 			session.sendMessage(new TextMessage(response.toString()));
 		}
 		else{
-			if(viewerUserSessions.containsKey(session.getId())){
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "playResponse");
-				response.addProperty("response", "rejected");
-				response.addProperty("message","You are already viewing this recording");
-				session.sendMessage(new TextMessage(response.toString()));
-				return;				
-			}
+			//TODO: fix logic for multiple stream pipelines
+//			if(viewerUserSessions.containsKey(session.getId())){
+//				JsonObject response = new JsonObject();
+//				response.addProperty("id", "playResponse");
+//				response.addProperty("response", "rejected");
+//				response.addProperty("message","You are already viewing this recording");
+//				session.sendMessage(new TextMessage(response.toString()));
+//				return;				
+//			}
 			
 			//1. Media logic
-			final RecordedBroadcastPipeline pipeline = new RecordedBroadcastPipeline(kurento, "test-broadcast", session);
+			final RecordedBroadcastPipeline pipeline = new RecordedBroadcastPipeline(kurento, "test-broadcast-" + media, session);
 			String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 			
 			//2. Store user session
-			UserSession viewer = new UserSession(session);
+			UserSession viewer = viewerUserSessions.containsKey(session.getId()) ? viewerUserSessions.get(session.getId()) : new UserSession(session);
 			viewerUserSessions.put(session.getId(), viewer);
-			viewer.setWebRtcEndpoint(pipeline.getWebRtc());
+			
+			if(media.equals("webcam")){
+				viewer.setWebcamRtcEndpoint(pipeline.getWebRtc());
+			}
+			else if(media.equals("desktop")){
+				viewer.setDesktopRtcEndpoint(pipeline.getWebRtc());
+			}
 
 			//4. Gather ICE candidates
 			pipeline.getWebRtc().addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
@@ -114,6 +134,7 @@ public class MessageHandler extends TextWebSocketHandler {
 				public void onEvent(OnIceCandidateEvent event) {
 					JsonObject response = new JsonObject();
 					response.addProperty("id", "iceCandidate");
+					response.addProperty("media", media);
 					response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
 					try {
 						synchronized (session) {
@@ -131,6 +152,7 @@ public class MessageHandler extends TextWebSocketHandler {
 			JsonObject response = new JsonObject();
 			response.addProperty("id", "playResponse");
 			response.addProperty("response", "accepted");
+			response.addProperty("media", media);
 			response.addProperty("sdpAnswer", sdpAnswer);
 
 			pipeline.startPlaying();
@@ -142,16 +164,21 @@ public class MessageHandler extends TextWebSocketHandler {
 		}
 	}
 
-	private synchronized void broadcast(final WebSocketSession session, JsonObject jsonMessage) throws IOException{
-		//If nobody is broadcasting, start a broadcaster user session
-		if (broadcasterUserSession == null){
+	private synchronized BroadcastPipeline broadcast(final WebSocketSession session, JsonObject jsonMessage, final String media) throws IOException{
+		//If nobody is broadcasting, start a broadcaster user session or if the broadcaster would like to add a media stream
+		if (broadcasterUserSession == null || broadcasterUserSession.getSessionId().equals(session.getId())){
 			
 			//1. Media logic
-			broadcastPipeline = new BroadcastPipeline(kurento, "test-broadcast");
+			BroadcastPipeline broadcastPipeline = new BroadcastPipeline(kurento, "test-broadcast-" + media, UUID.randomUUID());
 			
-			//2. User session
-			broadcasterUserSession = new UserSession(session);
-			broadcasterUserSession.setWebRtcEndpoint(broadcastPipeline.getWebRtcEndpoint());
+			if(broadcasterUserSession == null){
+				//2. User session
+				broadcasterUserSession = new UserSession(session);
+			}
+			if(media.equals("webcam"))
+				broadcasterUserSession.setWebcamRtcEndpoint(broadcastPipeline.getWebRtcEndpoint());
+			else if(media.equals("desktop"))
+				broadcasterUserSession.setDesktopRtcEndpoint(broadcastPipeline.getWebRtcEndpoint());
 			
 			//3. SDP negotiation
 			String broadcastSdpOffer = jsonMessage.get("sdpOffer").getAsString();
@@ -165,6 +192,7 @@ public class MessageHandler extends TextWebSocketHandler {
 						public void onEvent(OnIceCandidateEvent event) {
 							JsonObject response = new JsonObject();
 							response.addProperty("id", "iceCandidate");
+							response.addProperty("media", media);
 							response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
 							try {
 								synchronized (session) {
@@ -180,6 +208,7 @@ public class MessageHandler extends TextWebSocketHandler {
 			
 			startBroadcast.addProperty("id", "broadcasterResponse");
 			startBroadcast.addProperty("response", "accepted");
+			startBroadcast.addProperty("media", media);
 			startBroadcast.addProperty("sdpAnswer", broadcastSdpAnswer);
 			
 			synchronized (broadcasterUserSession){
@@ -189,18 +218,22 @@ public class MessageHandler extends TextWebSocketHandler {
 			broadcastPipeline.getWebRtcEndpoint().gatherCandidates();
 			
 			broadcastPipeline.startRecording();
+			
+			return broadcastPipeline;
 
 		} else {
 			JsonObject response = new JsonObject();
-			response.addProperty("id", "presenterResponse");
+			response.addProperty("id", "broadcasterResponse");
 			response.addProperty("response", "rejected");
 			response.addProperty("message", "Another user is currently acting as sender. Try again later ...");
 			session.sendMessage(new TextMessage(response.toString()));
 		}
+		
+		return null;
 	}
 
-	private synchronized void viewBroadcast(final WebSocketSession session, JsonObject jsonMessage) throws IOException{
-		if (broadcasterUserSession == null || broadcastPipeline == null){
+	private synchronized void viewBroadcast(final WebSocketSession session, JsonObject jsonMessage, BroadcastPipeline pipeline, final String media) throws IOException{
+		if (broadcasterUserSession == null || pipeline == null){
 			JsonObject response = new JsonObject();
 			response.addProperty("id", "viewerResponse");
 			response.addProperty("response", "rejected");
@@ -208,22 +241,24 @@ public class MessageHandler extends TextWebSocketHandler {
 			session.sendMessage(new TextMessage(response.toString()));
 		}
 		else{
-			if(viewerUserSessions.containsKey(session.getId())){
-				JsonObject response = new JsonObject();
-				response.addProperty("id", "viewerResponse");
-				response.addProperty("response", "rejected");
-				response.addProperty("message","You are already viewing this broadcast");
-				session.sendMessage(new TextMessage(response.toString()));
-				return;				
-			}
+			//TODO: address multiple streams
+//			if(viewerUserSessions.containsKey(session.getId())){
+//				JsonObject response = new JsonObject();
+//				response.addProperty("id", "viewerResponse");
+//				response.addProperty("response", "rejected");
+//				response.addProperty("message","You are already viewing this broadcast");
+//				session.sendMessage(new TextMessage(response.toString()));
+//				return;				
+//			}
 			log.info("Starting to view broadcast");
 
-			UserSession viewer = new UserSession(session);
+			UserSession viewer = viewerUserSessions.containsKey(session.getId()) ? viewerUserSessions.get(session.getId()) : new UserSession(session);
+			//TODO: possibly make this better
 			viewerUserSessions.put(session.getId(), viewer);
 
 			String sdpOffer = jsonMessage.get("sdpOffer").getAsString();
 
-			WebRtcEndpoint nextWebRtc = broadcastPipeline.buildViewerEndpoint();
+			WebRtcEndpoint nextWebRtc = pipeline.buildViewerEndpoint();
 
 			nextWebRtc.addOnIceCandidateListener(new EventListener<OnIceCandidateEvent>() {
 
@@ -231,6 +266,7 @@ public class MessageHandler extends TextWebSocketHandler {
 				public void onEvent(OnIceCandidateEvent event) {
 					JsonObject response = new JsonObject();
 					response.addProperty("id", "iceCandidate");
+					response.addProperty("media", media);
 					response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
 					try {
 						synchronized (session) {
@@ -242,13 +278,20 @@ public class MessageHandler extends TextWebSocketHandler {
 				}
 			});
 
-			viewer.setWebRtcEndpoint(nextWebRtc);
-			broadcasterUserSession.getWebRtcEndpoint().connect(nextWebRtc);
+			if(media.equals("webcam")){
+				viewer.setWebcamRtcEndpoint(nextWebRtc);
+				broadcasterUserSession.getWebcamRtcEndpoint().connect(nextWebRtc);
+			}
+			else if(media.equals("desktop")){
+				viewer.setDesktopRtcEndpoint(nextWebRtc);
+				broadcasterUserSession.getDesktopRtcEndpoint().connect(nextWebRtc);
+			}
 			String sdpAnswer = nextWebRtc.processOffer(sdpOffer);
 
 			JsonObject response = new JsonObject();
 			response.addProperty("id", "viewerResponse");
 			response.addProperty("response", "accepted");
+			response.addProperty("media", media);
 			response.addProperty("sdpAnswer", sdpAnswer);
 
 			synchronized (session) {
@@ -261,7 +304,7 @@ public class MessageHandler extends TextWebSocketHandler {
 	private synchronized void stop(WebSocketSession session) throws IOException{
 		log.info("Stop called");
 		String sessionId = session.getId();
-		if(broadcasterUserSession != null && broadcasterUserSession.getSession().getId().equals(sessionId)){
+		if(broadcasterUserSession != null && broadcasterUserSession.getSessionId().equals(sessionId)){
 			for (UserSession viewer : viewerUserSessions.values()){
 				JsonObject response = new JsonObject();
 				response.addProperty("id", "stopCommunication");
@@ -269,16 +312,22 @@ public class MessageHandler extends TextWebSocketHandler {
 			}
 
 			log.info("Stop Recording and release broadcast pipeline");
-			if(broadcastPipeline != null){
-				broadcastPipeline.stopRecording();
-				broadcastPipeline.getMediaPipeline().release();
+			if(broadcastWebcamPipeline != null){
+				broadcastWebcamPipeline.stopRecording();
+				broadcastWebcamPipeline.getMediaPipeline().release();
 			}
-			broadcastPipeline = null;
+			if(broadcastDesktopPipeline != null){
+				broadcastDesktopPipeline.stopRecording();
+				broadcastDesktopPipeline.getMediaPipeline().release();	
+			}
+			broadcastWebcamPipeline = null;
+			broadcastDesktopPipeline = null;
 			broadcasterUserSession = null;
 		}
 		else if(viewerUserSessions.containsKey(sessionId)) {
-			if(viewerUserSessions.get(sessionId).getWebRtcEndpoint() != null){
-				viewerUserSessions.get(sessionId).getWebRtcEndpoint().release();
+			//TODO: fix
+			if(viewerUserSessions.get(sessionId).getWebcamRtcEndpoint() != null){
+				viewerUserSessions.get(sessionId).getWebcamRtcEndpoint().release();
 			}
 			viewerUserSessions.remove(sessionId);
 		}
